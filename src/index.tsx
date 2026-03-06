@@ -13,7 +13,7 @@ import App from "./App";
 import "../style/index.css";
 
 /**
- * Extension ID (must match package.json name)
+ * Extension ID 
  */
 const EXTENSION_ID = "assignment-hub-jupyterlab";
 
@@ -26,7 +26,7 @@ function createWidget(): Widget {
   widget.title.label = "Assignment Hub";
   widget.title.closable = true;
 
-  /* 🔴 CRITICAL: must match CSS root selector */
+
   widget.addClass("assignments-ui-widget");
 
   /* Ensure widget fills JupyterLab main area */
@@ -54,7 +54,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     const command = "assignment-hub:open";
 
-    /* Prevent duplicate widgets */
+    
     let widget: Widget | null = null;
 
     app.commands.addCommand(command, {
@@ -77,5 +77,6 @@ const plugin: JupyterFrontEndPlugin<void> = {
     });
   }
 };
+
 
 export default plugin;
