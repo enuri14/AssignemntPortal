@@ -21,7 +21,7 @@ export async function requestAPI<T>(
 
   const data = await response.json();
 
-  // Throw error if request failed
+
   if (!response.ok) {
     throw new ServerConnection.ResponseError(response, data.message);
   }
@@ -51,7 +51,7 @@ export async function fetchAssignments(): Promise<Assignment[]> {
       Submitted: 3
     };
 
-    // Map nbgrader status → UI-friendly status
+    // Map nbgrader status
     const STATUS_MAP: Record<string, Assignment["status"]> = {
       released: "Released",
       fetched: "Downloaded",
@@ -123,7 +123,7 @@ export async function fetchAssignments(): Promise<Assignment[]> {
       }
     }
 
-    // Convert Map → Array for UI consumption
+    // Convert Map - Array for UI consumption
     return Array.from(assignmentMap.values());
   } catch (error) {
     console.error("Failed to fetch assignments", error);
@@ -164,3 +164,4 @@ export async function fetchCourses(): Promise<Course[]> {
     return [];
   }
 }
+
