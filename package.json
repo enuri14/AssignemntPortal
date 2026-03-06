@@ -1,0 +1,34 @@
+{
+  "name": "assignment-hub-jupyterlab",
+  "version": "0.1.1",
+  "description": "Assignment Hub JupyterLab extension",
+  "main": "lib/index.js",
+  "style": "style/index.css",
+  "scripts": {
+    "build:ts": "tsc",
+    "build": "jlpm run build:ts && jupyter labextension build --development True .",
+    "build:prod": "jlpm run build:ts && jupyter labextension build .",
+    "clean": "rimraf lib assignment_hub_jupyterlab/labextension"
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^4.5.5",
+    "@jupyterlab/apputils": "^4.6.5",
+    "@jupyterlab/launcher": "^4.5.5",
+    "@jupyterlab/mainmenu": "^4.5.5",
+    "@lumino/messaging": "^2",
+    "@lumino/signaling": "^2",
+    "@lumino/widgets": "^2",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "react-router-dom": "5.3.4"
+  },
+  "devDependencies": {
+    "@jupyterlab/builder": "^4.5.5",
+    "rimraf": "^5.0.1",
+    "typescript": "^4.9.5"
+  },
+  "jupyterlab": {
+    "extension": true,
+    "outputDir": "assignment_hub_jupyterlab/labextension"
+  }
+}

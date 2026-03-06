@@ -1,0 +1,15 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v4.5.1
+_src_path: https://github.com/jupyterlab/extension-template
+author_email: enurilasathmi14@gmail.com
+author_name: Enuri
+has_ai_rules: false
+has_binder: false
+has_settings: true
+kind: frontend
+labextension_name: assignment-hub-jupyterlab
+project_short_description: A JupyterLab extension.
+python_name: assignment_hub_jupyterlab
+repository: https://github.com/enuri14/AssignmntPortal
+test: false
+

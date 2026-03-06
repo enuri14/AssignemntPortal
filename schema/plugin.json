@@ -1,0 +1,8 @@
+{
+  "title": "assignment-hub-jupyterlab",
+  "description": "Assignment Hub settings",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
+
