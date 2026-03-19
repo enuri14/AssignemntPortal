@@ -9,10 +9,6 @@ import {
 import AssignmentsPage from "./components/AssignmentsPage";
 import AssignmentDetailsPage from "./components/AssignmentDetailsPage";
 
-/**
- * HARD TYPE OVERRIDE
- * Required for React 17 + TS + JL3
- */
 const RouterAny = HashRouter as any;
 const SwitchAny = Switch as any;
 const RouteAny = Route as any;

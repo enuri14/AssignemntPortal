@@ -100,7 +100,7 @@ export async function fetchAssignments(): Promise<Assignment[]> {
             intakeLabel: rawAssignment.course_id,
             intakeOrder: 1,
 
-            // Due dates are not exposed by nbgrader student API
+           
             releaseDate: rawAssignment.release_date ?? "",
             dueDate: rawAssignment.due_date ?? "",
 
@@ -165,3 +165,35 @@ export async function fetchCourses(): Promise<Course[]> {
   }
 }
 
+/* 
+   Download (fetch) an assignment
+   */
+export async function downloadAssignment(courseId: string, assignmentId: string): Promise<void> {
+  await requestAPI("assignments/fetch", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      course_id: courseId,
+      assignment_id: assignmentId,
+    }),
+  });
+}
+
+/* 
+   Submit an assignment
+   */
+export async function submitAssignment(courseId: string, assignmentId: string, files: FileList): Promise<void> {
+  const formData = new FormData();
+  formData.append("course_id", courseId);
+  formData.append("assignment_id", assignmentId);
+  for (let i = 0; i < files.length; i++) {
+    formData.append("files", files[i]);
+  }
+
+  await requestAPI("assignments/submit", {
+    method: "POST",
+    body: formData,
+  });
+}

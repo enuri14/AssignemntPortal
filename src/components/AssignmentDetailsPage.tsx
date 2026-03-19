@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useHistory } from "react-router-dom";
 import type { Assignment, Notebook } from "../types";
-import { fetchAssignmentById } from "../api";
+import { fetchAssignmentById, submitAssignment } from "../api";
 
 const AssignmentDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +21,7 @@ const AssignmentDetailsPage: React.FC = () => {
         setLoading(true);
         const data = await fetchAssignmentById(id);
         setAssignment(data);
-        setLocalStatus(data.status);
+        setLocalStatus(data?.status ?? null);
       } catch (e) {
         console.error(e);
         setError("Could not load assignment.");
@@ -37,22 +37,30 @@ const AssignmentDetailsPage: React.FC = () => {
     window.open(nb.viewUrl, "_blank", "noopener,noreferrer");
   };
 
+  /* UPDATED DOWNLOAD HANDLER */
   const handleDownloadAssignment = () => {
     if (!assignment) return;
-    window.open(
-      `/api/assignments/${assignment.id}/download`,
-      "_blank",
-      "noopener,noreferrer"
-    );
+
+    const downloadUrl = `/exchange/${assignment.courseId}/release/${assignment.id}.zip`;
+
+    window.open(downloadUrl, "_blank", "noopener,noreferrer");
+
     setLocalStatus("Downloaded");
   };
 
-  const handleSubmitAssignment = () => {
+  const handleSubmitAssignment = async (files: FileList) => {
     if (!assignment) return;
-    const now = new Date().toISOString();
-    setAssignment({ ...assignment, submittedDate: now });
-    setLocalStatus("Submitted");
-    alert("Assignment submitted (simulated).");
+
+    try {
+      await submitAssignment(assignment.courseId, assignment.id, files);
+
+      const now = new Date().toISOString();
+      setAssignment({ ...assignment, submittedDate: now });
+      setLocalStatus("Submitted");
+    } catch (error) {
+      console.error("Failed to submit assignment", error);
+      alert("Failed to submit assignment");
+    }
   };
 
   if (loading) return <div className="info-box">Loading assignment…</div>;
@@ -145,9 +153,23 @@ const AssignmentDetailsPage: React.FC = () => {
             {new Date(assignment.submittedDate).toLocaleString()}
           </div>
         ) : (
-          <button className="primary-btn" onClick={handleSubmitAssignment}>
-            Submit assignment
-          </button>
+          <div>
+            <input type="file" multiple id="submit-files" />
+            <button
+              className="primary-btn"
+              onClick={() => {
+                const input = document.getElementById("submit-files") as HTMLInputElement;
+
+                if (input.files && input.files.length > 0) {
+                  handleSubmitAssignment(input.files);
+                } else {
+                  alert("Please select files to submit");
+                }
+              }}
+            >
+              Submit assignment
+            </button>
+          </div>
         )}
       </section>
     </section>
@@ -155,4 +177,3 @@ const AssignmentDetailsPage: React.FC = () => {
 };
 
 export default AssignmentDetailsPage;
-
