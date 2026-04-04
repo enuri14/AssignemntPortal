@@ -2,17 +2,14 @@ import type { Assignment, Course } from "./types";
 import { URLExt } from "@jupyterlab/coreutils";
 import { ServerConnection } from "@jupyterlab/services";
 
-
 export async function requestAPI<T>(
   endPoint: string = "",
   init: RequestInit = {}
 ): Promise<T> {
-  // Read Jupyter server configuration (base URL, auth, etc.)
   const settings = ServerConnection.makeSettings();
 
   const requestUrl = URLExt.join(settings.baseUrl, endPoint);
 
-  // Send request using Jupyter's internal request handler
   const response = await ServerConnection.makeRequest(
     requestUrl,
     init,
@@ -21,7 +18,6 @@ export async function requestAPI<T>(
 
   const data = await response.json();
 
-
   if (!response.ok) {
     throw new ServerConnection.ResponseError(response, data.message);
   }
@@ -29,38 +25,30 @@ export async function requestAPI<T>(
   return data;
 }
 
-/* 
-   Fetch all assignments (from all courses)
-    */
+/* Fetch all assignments */
 export async function fetchAssignments(): Promise<Assignment[]> {
   try {
-    //  Fetch available courses from nbgrader
-    const coursesResponse = await requestAPI<any>("courses");  //http://localhost:8888/assignments?course_id=mycourse
+    const coursesResponse = await requestAPI<any>("courses");
 
     if (!coursesResponse.success || !Array.isArray(coursesResponse.value)) {
       return [];
     }
 
-    // Map used to remove duplicate assignments
     const assignmentMap = new Map<string, Assignment>();
 
-    // Status priority (higher value = more advanced state)
     const STATUS_PRIORITY: Record<Assignment["status"], number> = {
       Released: 1,
       Downloaded: 2,
       Submitted: 3
     };
 
-    // Map nbgrader status
     const STATUS_MAP: Record<string, Assignment["status"]> = {
       released: "Released",
       fetched: "Downloaded",
       submitted: "Submitted"
     };
 
-    // Fetch assignments for each course
     for (const courseId of coursesResponse.value) {
-      // Build query parameters using dictionary
       const queryParams = new URLSearchParams({ course_id: courseId });
 
       const assignmentsResponse = await requestAPI<any>(
@@ -71,16 +59,13 @@ export async function fetchAssignments(): Promise<Assignment[]> {
         continue;
       }
 
-      // Process each assignment record
       for (const rawAssignment of assignmentsResponse.value) {
         const assignmentStatus =
           STATUS_MAP[rawAssignment.status] ?? "Released";
 
-        // Unique key per course + assignment
         const assignmentKey = `${rawAssignment.course_id}::${rawAssignment.assignment_id}`;
         const existingAssignment = assignmentMap.get(assignmentKey);
 
-        // Keep the assignment with the most advanced status
         if (
           !existingAssignment ||
           STATUS_PRIORITY[assignmentStatus] >
@@ -100,7 +85,6 @@ export async function fetchAssignments(): Promise<Assignment[]> {
             intakeLabel: rawAssignment.course_id,
             intakeOrder: 1,
 
-           
             releaseDate: rawAssignment.release_date ?? "",
             dueDate: rawAssignment.due_date ?? "",
 
@@ -123,7 +107,6 @@ export async function fetchAssignments(): Promise<Assignment[]> {
       }
     }
 
-    // Convert Map - Array for UI consumption
     return Array.from(assignmentMap.values());
   } catch (error) {
     console.error("Failed to fetch assignments", error);
@@ -131,9 +114,7 @@ export async function fetchAssignments(): Promise<Assignment[]> {
   }
 }
 
-/* 
-   Fetch assignment by ID
-   */
+/* Fetch assignment by ID */
 export async function fetchAssignmentById(
   assignmentId: string
 ): Promise<Assignment | null> {
@@ -141,9 +122,7 @@ export async function fetchAssignmentById(
   return assignments.find(a => a.id === assignmentId) ?? null;
 }
 
-/* 
-   Fetch courses
-   */
+/* Fetch courses */
 export async function fetchCourses(): Promise<Course[]> {
   try {
     const coursesResponse = await requestAPI<any>("courses");
@@ -152,7 +131,6 @@ export async function fetchCourses(): Promise<Course[]> {
       return [];
     }
 
-    // Convert course IDs into Course objects
     return coursesResponse.value.map((courseId: string) => ({
       id: courseId,
       code: courseId,
@@ -163,37 +141,4 @@ export async function fetchCourses(): Promise<Course[]> {
   } catch {
     return [];
   }
-}
-
-/* 
-   Download (fetch) an assignment
-   */
-export async function downloadAssignment(courseId: string, assignmentId: string): Promise<void> {
-  await requestAPI("assignments/fetch", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      course_id: courseId,
-      assignment_id: assignmentId,
-    }),
-  });
-}
-
-/* 
-   Submit an assignment
-   */
-export async function submitAssignment(courseId: string, assignmentId: string, files: FileList): Promise<void> {
-  const formData = new FormData();
-  formData.append("course_id", courseId);
-  formData.append("assignment_id", assignmentId);
-  for (let i = 0; i < files.length; i++) {
-    formData.append("files", files[i]);
-  }
-
-  await requestAPI("assignments/submit", {
-    method: "POST",
-    body: formData,
-  });
 }

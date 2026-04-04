@@ -40,12 +40,32 @@ const AssignmentsPage: React.FC = () => {
     async function load() {
       try {
         setLoading(true);
+
         const [c, a] = await Promise.all([
           fetchCourses(),
           fetchAssignments()
         ]);
+
         setCourses(c ?? []);
-        setAssignments(a ?? []);
+
+        // ✅ APPLY SAVED STATUS FROM localStorage
+        const updatedAssignments = (a ?? []).map(assign => {
+          const savedStatus = localStorage.getItem(
+            `assignment-status-${assign.id}`
+          );
+
+          if (savedStatus) {
+            return {
+              ...assign,
+              status: savedStatus as Assignment["status"]
+            };
+          }
+
+          return assign;
+        });
+
+        setAssignments(updatedAssignments);
+
       } catch (e) {
         console.error(e);
         setError("Could not load assignments.");
@@ -53,6 +73,7 @@ const AssignmentsPage: React.FC = () => {
         setLoading(false);
       }
     }
+
     load();
   }, []);
 
@@ -84,6 +105,7 @@ const AssignmentsPage: React.FC = () => {
     }
 
     const map = new Map<string, Assignment[]>();
+
     filtered.forEach(a => {
       const key = a.intakeLabel ?? "Other";
       if (!map.has(key)) map.set(key, []);
@@ -200,4 +222,3 @@ const AssignmentsPage: React.FC = () => {
 };
 
 export default AssignmentsPage;
-

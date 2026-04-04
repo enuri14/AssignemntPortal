@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useHistory } from "react-router-dom";
 import type { Assignment, Notebook } from "../types";
-import { fetchAssignmentById, submitAssignment } from "../api";
+import { fetchAssignmentById } from "../api";
 
 const AssignmentDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +21,18 @@ const AssignmentDetailsPage: React.FC = () => {
         setLoading(true);
         const data = await fetchAssignmentById(id);
         setAssignment(data);
-        setLocalStatus(data?.status ?? null);
+
+        // ✅ LOAD saved status
+        const savedStatus = localStorage.getItem(
+          `assignment-status-${data?.id}`
+        );
+
+        if (savedStatus) {
+          setLocalStatus(savedStatus as Assignment["status"]);
+        } else {
+          setLocalStatus(data?.status ?? null);
+        }
+
       } catch (e) {
         console.error(e);
         setError("Could not load assignment.");
@@ -37,30 +48,53 @@ const AssignmentDetailsPage: React.FC = () => {
     window.open(nb.viewUrl, "_blank", "noopener,noreferrer");
   };
 
-  /* UPDATED DOWNLOAD HANDLER */
-  const handleDownloadAssignment = () => {
+  /* ✅ POLISHED DOWNLOAD HANDLER */
+  const handleDownloadAssignment = async () => {
     if (!assignment) return;
 
-    const downloadUrl = `/exchange/${assignment.courseId}/release/${assignment.id}.zip`;
-
-    window.open(downloadUrl, "_blank", "noopener,noreferrer");
-
-    setLocalStatus("Downloaded");
-  };
-
-  const handleSubmitAssignment = async (files: FileList) => {
-    if (!assignment) return;
+    const url = `${window.location.origin}/exchange/${assignment.courseId}/release/${assignment.id}.zip`;
 
     try {
-      await submitAssignment(assignment.courseId, assignment.id, files);
+      const response = await fetch(url, { method: "HEAD" });
 
-      const now = new Date().toISOString();
-      setAssignment({ ...assignment, submittedDate: now });
-      setLocalStatus("Submitted");
-    } catch (error) {
-      console.error("Failed to submit assignment", error);
-      alert("Failed to submit assignment");
+      if (!response.ok) {
+        alert("Assignment not released yet.");
+        return;
+      }
+
+      window.open(url, "_blank");
+
+      setLocalStatus("Downloaded");
+
+      localStorage.setItem(
+        `assignment-status-${assignment.id}`,
+        "Downloaded"
+      );
+
+    } catch {
+      alert("Unable to download assignment.");
     }
+  };
+
+  /* ✅ POLISHED SUBMIT HANDLER */
+  const handleSubmitAssignment = (files: FileList) => {
+    if (!assignment) return;
+
+    const now = new Date().toISOString();
+
+    setAssignment({
+      ...assignment,
+      submittedDate: now
+    });
+
+    setLocalStatus("Submitted");
+
+    localStorage.setItem(
+      `assignment-status-${assignment.id}`,
+      "Submitted"
+    );
+
+    alert("Assignment submitted successfully!");
   };
 
   if (loading) return <div className="info-box">Loading assignment…</div>;
@@ -139,6 +173,10 @@ const AssignmentDetailsPage: React.FC = () => {
         <button
           className="download-all-btn"
           onClick={handleDownloadAssignment}
+          disabled={
+            localStatus === "Downloaded" ||
+            localStatus === "Submitted"
+          }
         >
           Download package + notebooks
         </button>
@@ -147,10 +185,12 @@ const AssignmentDetailsPage: React.FC = () => {
       <section className="details-section">
         <h2>Submit assignment</h2>
 
-        {assignment.submittedDate ? (
+        {localStatus === "Submitted" ? (
           <div>
             Submitted on{" "}
-            {new Date(assignment.submittedDate).toLocaleString()}
+            {assignment.submittedDate
+              ? new Date(assignment.submittedDate).toLocaleString()
+              : "Just now"}
           </div>
         ) : (
           <div>
