@@ -22,7 +22,7 @@ const AssignmentDetailsPage: React.FC = () => {
         const data = await fetchAssignmentById(id);
         setAssignment(data);
 
-        // ✅ LOAD saved status
+        //LOAD saved status
         const savedStatus = localStorage.getItem(
           `assignment-status-${data?.id}`
         );
@@ -48,7 +48,7 @@ const AssignmentDetailsPage: React.FC = () => {
     window.open(nb.viewUrl, "_blank", "noopener,noreferrer");
   };
 
-  /* ✅ POLISHED DOWNLOAD HANDLER */
+  /* DOWNLOAD HANDLER */
   const handleDownloadAssignment = async () => {
     if (!assignment) return;
 
